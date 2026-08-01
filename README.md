@@ -1,39 +1,69 @@
 <div align="center">
-  <h1>🫁 COPD Audio Progression Pipeline</h1>
-  <p><strong>Published at the 2026 International Conference on Bioinformatics and Computational Biology (ICBCB), Japan.</strong></p>
-  
-  [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
-  [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange.svg)](https://www.tensorflow.org/)
-  [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+# 🫁 COPD Audio Progression Pipeline
+**A Multi-Stage Hierarchical Classification System for Respiratory Sounds**
+
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange.svg)](https://www.tensorflow.org/)
+[![Paper](https://img.shields.io/badge/Published_in-ICBCB_2026_Japan-purple.svg)]()
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 </div>
 
 <br>
 
 ## 📌 Overview
 
-This repository contains the official codebase and models for **COPD Audio Progression**, a state-of-the-art diagnostic pipeline designed to classify the severity stages of Chronic Obstructive Pulmonary Disease (COPD) using respiratory audio signals.
+This repository contains the official codebase and pre-trained expert models for **COPD Audio Progression**, an advanced diagnostic pipeline designed to classify the severity stages of Chronic Obstructive Pulmonary Disease (COPD) using raw respiratory audio signals.
 
-Our research proposes a robust, multi-stage hierarchical classification system that processes raw audio signals (like those from the Respiratory Sound Database) and progressively categorizes them into stages of severity (Healthy vs. Early Stage, Stage 1 vs. 2, Stage 2 vs. 3, and Stage 3 vs. 4). 
+Our research proposes a two-step, multi-stage hierarchical classification system that mimics a clinical diagnostic process. By segmenting the problem into granular stages (Healthy vs. Early Stage, Stage 1 vs. 2, Stage 2 vs. 3, and Stage 3 vs. 4), the pipeline achieves significantly higher confidence and accuracy than single monolithic models.
 
-## 🚀 Key Features
+---
 
-- **Multi-Stage Expert Models:** Uses specialized `.keras` models for granular classification at each severity boundary.
-- **Custom Group Normalization:** Implements custom layer definitions to improve model stability across varying acoustic environments.
-- **Majority Voting System:** Employs a robust voting mechanism across multiple audio chunks to ensure high-confidence diagnostics.
-- **Plug-and-Play Architecture:** Simply point the pipeline to a folder of patient audio files, and it generates a comprehensive diagnostic report.
+## 🔬 The 2-Step Methodology
 
-## 📂 Repository Structure
+Our pipeline mirrors clinical evaluation by first establishing a baseline severity, and then assessing the probability of progression.
 
-```text
-📦 COPD-Research-project
- ┣ 📂 RespiratoryDatabase@TR/   # Respiratory audio datasets for testing
- ┣ 📂 models/                   # Pre-trained .keras models and .npy scaler files
- ┣ 📜 run_full_pipeline.ipynb   # The main Jupyter Notebook to run predictions
- ┣ 📜 balanced_labels.csv       # Dataset labels
- ┣ 📜 Labels.xlsx               # Additional label metadata
- ┣ 📜 requirements.txt          # Python dependencies
- ┗ 📜 README.md                 # Project documentation (You are here!)
-```
+### Step 1: Base Stage Classification
+**Primary Script:** `classifier.ipynb`
+
+In this initial phase, raw audio data is processed and classified to determine the patient's current baseline severity stage. This script extracts Log-Mel Spectrograms and utilizes our core generalized models to place the audio into a distinct COPD category.
+
+### Step 2: Progression Prediction
+**Primary Folders:** `COPD 0-1/`, `COPD 1-2/`, `COPD 2-3/`, `COPD 3-4/`
+
+Once the baseline stage is classified, the pipeline invokes the corresponding **Expert Model**. 
+For example, if the patient is classified as Stage 1, the pipeline dynamically loads the models from the `COPD 1-2/` folder. This expert model is highly specialized to detect the subtle acoustic boundary between Stage 1 and Stage 2, predicting the probabilistic chances of the patient progressing to the next stage.
+
+*(Note: For a fully automated end-to-end wrapper of this 2-step methodology, see `run_full_pipeline.ipynb`.)*
+
+---
+
+## 📂 Project Structure & File Glossary
+
+We maintain this repository mirroring professional deep learning lab standards. Here is exactly what each component does:
+
+### 1. Root Code & Configuration
+- **`classifier.ipynb`**: The primary research notebook for Step 1. It visualizes the audio waveforms/spectrograms and runs the baseline stage classification.
+- **`run_full_pipeline.ipynb`**: The automated script that strings Step 1 and Step 2 together, outputting a complete text-based Diagnostic Report for a given patient.
+- **`requirements.txt`**: The exact environment dependencies needed to reproduce our results.
+
+### 2. Expert Model Directories
+Each directory contains specialized `.keras` models and normalizer statistics (`.npy`) tuned specifically for binary boundary classification.
+- **`COPD 0-1/`**: Contains the model determining Healthy vs. Early Stage (Stage 1).
+- **`COPD 1-2/`**: Contains the model determining progression from Stage 1 to Stage 2. *(Note: This utilizes a distinct 128-Mel config).*
+- **`COPD 2-3/`**: Contains the model determining progression from Stage 2 to Stage 3.
+- **`COPD 3-4/`**: Contains the model determining progression from Stage 3 to Stage 4 (Severe).
+- **`models/`**: A centralized repository of the combined `.keras` weights used by the automated pipeline.
+
+### 3. Data & Labels
+- **`RespiratoryDatabase@TR/`**: A small, clean sample directory of testing `.wav` files included directly in this repo for immediate testing and verification.
+- **`balanced_labels.csv` & `Labels.xlsx`**: The clinical ground-truth metadata mapping patient IDs to their respective diagnoses and respiratory cycle events.
+
+> **Where is the full 2.1 GB Dataset?**  
+> To keep the repository lightweight and clone-able, we do not host the full 2.1 GB `archive/` database here. Our research utilized the open-source **Respiratory Sound Database** from Kaggle. You can download the full database and place it in the project root to run large-scale evaluations.
+
+---
 
 ## 🛠️ Installation & Setup
 
@@ -54,22 +84,25 @@ Our research proposes a robust, multi-stage hierarchical classification system t
    pip install -r requirements.txt
    ```
 
-## 💻 How to Use
+---
 
-To generate a full diagnostic report for a patient:
+## 💻 How to Run
 
-1. Launch Jupyter Notebook:
-   ```bash
-   jupyter notebook
-   ```
-2. Open `run_full_pipeline.ipynb`.
-3. The notebook is pre-configured with relative paths to the included `models/` and `RespiratoryDatabase@TR/` directories.
-4. Set the `PATIENT_ID_TO_ANALYZE` variable in **Step 1** to the desired patient ID (e.g., `"221"`).
-5. Run all cells to execute the multi-stage classification pipeline and view the final **Comprehensive Diagnostic Report**.
+### Manual Evaluation (Research Mode)
+1. Open `classifier.ipynb` in Jupyter Notebook.
+2. Provide a path to a single `.wav` file to visualize the Log-Mel Spectrogram and compute its base classification.
+3. Open the corresponding Jupyter Notebook located inside the `COPD X-Y/` folders (e.g., `model.ipynb`) to evaluate the exact probability of progression.
+
+### Automated Evaluation (Clinical Mode)
+1. Open `run_full_pipeline.ipynb` in Jupyter Notebook.
+2. Set the `PATIENT_ID_TO_ANALYZE` variable (e.g., `"221"`).
+3. Run the notebook to generate a definitive text report that internally utilizes the 2-step methodology and expert model polling.
+
+---
 
 ## 📖 Citation
 
-If you use this codebase or models in your research, please cite our paper:
+If you use this codebase, methodology, or pre-trained models in your research, please cite our paper:
 
 ```bibtex
 @inproceedings{punith2026copd,
@@ -86,4 +119,4 @@ If you use this codebase or models in your research, please cite our paper:
 This project is released under the [MIT License](LICENSE).
 
 ---
-*Developed as part of cutting-edge research in respiratory sound analysis.*
+*Developed as part of cutting-edge computational biology research in respiratory sound analysis.*
